@@ -94,8 +94,6 @@ func main() {
     PrintGrid(grid)
     end, _ := ast.FindPath(source, target, astar.RawDist)
 
-    fmt.Println("\n\n\n\n\n\n\n\n\n\n\n\n")
-
     path := end
     for {
         if path.Row == source[0].Row && path.Col == source[0].Col {
