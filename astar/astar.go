@@ -8,7 +8,7 @@ type AStar interface {
     FillTile(p Point, weight int)
     ClearTile(p Point)
 
-    FindPath(source []Point, target Point, weightCalc WeightCalculation)
+    FindPath(source []Point, target Point, weightCalc WeightCalculation) (*PathPoint, map[Point]*PathPoint)
 }
 
 type Point struct {
@@ -55,9 +55,9 @@ func (a *aStarStruct) ClearTile(p Point) {
     delete(a.filledTiles, p)
 }
 
-func (a *aStarStruct) FindPath(source []Point, target Point, weightCalc WeightCalculation) {
-    var openList map[Point]*PathPoint
-    var closeList map[Point]*PathPoint
+func (a *aStarStruct) FindPath(source []Point, target Point, weightCalc WeightCalculation) (*PathPoint, map[Point]*PathPoint) {
+    var openList = make(map[Point]*PathPoint)
+    var closeList = make(map[Point]*PathPoint)
 
     for _, p := range source {
         openList[p] = &PathPoint{
@@ -106,6 +106,7 @@ func (a *aStarStruct) FindPath(source []Point, target Point, weightCalc WeightCa
         }
     }
 
+    return current, closeList
 }
 
 func (a *aStarStruct) getMinWeight(openList map[Point]*PathPoint) *PathPoint {
@@ -131,14 +132,14 @@ func (a *aStarStruct) getSurrounding(p Point) []Point {
         surrounding = append(surrounding, Point{row - 1, col})
     }
     if row < a.rows {
-        surrounding = append(surrounding, Point{row - 1, col})
+        surrounding = append(surrounding, Point{row + 1, col})
     }
 
     if col > 0 {
         surrounding = append(surrounding, Point{row, col - 1})
     }
     if col < a.cols {
-        surrounding = append(surrounding, Point{row, col - 1})
+        surrounding = append(surrounding, Point{row, col + 1})
     }
 
     return surrounding
