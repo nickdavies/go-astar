@@ -6,11 +6,11 @@ import (
 )
 
 type AStar interface {
-    aStarBase
+    AStarBase
     AStarConfig
 }
 
-type aStarBase interface {
+type AStarBase interface {
     FillTile(p Point, weight int)
     ClearTile(p Point)
 
@@ -23,7 +23,7 @@ type AStarConfig interface {
     SetWeight(p *PathPoint, fill_weight int, end []Point) (allowed bool)
 }
 
-type AStarBase struct {
+type AStarBaseStruct struct {
     Config AStarConfig
     // A list of filled tiles and their weight
     tileLock    sync.Mutex
@@ -33,33 +33,33 @@ type AStarBase struct {
     cols int
 }
 
-func NewAStarBase(rows, cols int) *AStarBase {
-    b := &AStarBase{
+func NewAStarBaseStruct(rows, cols int) *AStarBaseStruct {
+    b := &AStarBaseStruct{
         rows: rows,
         cols: cols,
 
         filledTiles: make(map[Point]int),
     }
-    var _ aStarBase = b
+    var _ AStarBase = b
 
     return b
 }
 
-func (a *AStarBase) FillTile(p Point, weight int) {
+func (a *AStarBaseStruct) FillTile(p Point, weight int) {
     a.tileLock.Lock()
     defer a.tileLock.Unlock()
 
     a.filledTiles[p] = weight
 }
 
-func (a *AStarBase) ClearTile(p Point) {
+func (a *AStarBaseStruct) ClearTile(p Point) {
     a.tileLock.Lock()
     defer a.tileLock.Unlock()
 
     delete(a.filledTiles, p)
 }
 
-func (a *AStarBase) FindPath(source, target []Point) (*PathPoint, map[Point]*PathPoint) {
+func (a *AStarBaseStruct) FindPath(source, target []Point) (*PathPoint, map[Point]*PathPoint) {
     var openList = make(map[Point]*PathPoint)
     var closeList = make(map[Point]*PathPoint)
 
@@ -125,7 +125,7 @@ func (a *AStarBase) FindPath(source, target []Point) (*PathPoint, map[Point]*Pat
     return current, closeList
 }
 
-func (a *AStarBase) getMinWeight(openList map[Point]*PathPoint) *PathPoint {
+func (a *AStarBaseStruct) getMinWeight(openList map[Point]*PathPoint) *PathPoint {
     var min *PathPoint = nil
     var minWeight int = 0
 
@@ -138,7 +138,7 @@ func (a *AStarBase) getMinWeight(openList map[Point]*PathPoint) *PathPoint {
     return min
 }
 
-func (a *AStarBase) getSurrounding(p Point) []Point {
+func (a *AStarBaseStruct) getSurrounding(p Point) []Point {
     var surrounding []Point
 
     row, col := p.Row, p.Col

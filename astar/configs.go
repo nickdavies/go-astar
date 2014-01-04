@@ -5,15 +5,15 @@ import "fmt"
 var _ = fmt.Sprint()
 
 type PointToPoint struct {
-    *AStarBase
+    *AStarBaseStruct
 }
 
 func NewPointToPoint(rows, cols int) AStar {
     p2p := &PointToPoint{
-        AStarBase: NewAStarBase(rows, cols),
+        AStarBaseStruct: NewAStarBaseStruct(rows, cols),
     }
 
-    p2p.AStarBase.Config = p2p
+    p2p.AStarBaseStruct.Config = p2p
 
     return p2p
 }

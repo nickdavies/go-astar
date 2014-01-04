@@ -43,22 +43,22 @@ func main () {
 
 ### Custom Routing Logic ###
 
-To use your own routing logic make a struct that has a `AStarBase` struct within it and
-initialise the `AStarBase` with the `NewAStarBase` function and set `AStarBase.config = x` where x is
+To use your own routing logic make a struct that has a `AStarBaseStruct` struct within it and
+initialise the `AStarBaseStruct` with the `NewAStarBase` function and set `AStarBaseStruct.config = x` where x is
 your struct. Then make sure your struct implements `AStarConfig` and you can use it to route.
 
 For example if you wanted routing that would ignore walls something that ignores walls:
 
 ```go
 type MyAStar struct {
-    *astar.AStarBase
+    *astar.AStarBaseStruct
 }
 
 func NewMyAStar (rows, cols int) astar.AStar {
     my := &MyAStar{
-        AStarBase: astar.NewAStarBase(rows, cols),
+        AStarBaseStruct: astar.NewAStarBase(rows, cols),
     }   
-    my.AStarBase.Config = my
+    my.AStarBaseStruct.Config = my
     return my
 }
 
