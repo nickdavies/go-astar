@@ -24,13 +24,13 @@ type AStarBase interface {
 // also determines the stopping condition
 type AStarConfig interface {
     // Determine if a valid end point has been reached. The end parameter
-    // Is the value passed in as source because the algorithm works backwards.
+    // is the value passed in as source because the algorithm works backwards.
     IsEnd(p Point, end []Point) bool
 
     // Calculate and set the weight for p.
     // fill_weight is the weight assigned to the tile when FillTile was called
-    // or 0 if it was never called for that tile
-    // end is also provided so you can perform calculations such as distance remaining
+    // or 0 if it was never called for that tile.
+    // end is also provided so you can perform calculations such as distance remaining.
     SetWeight(p *PathPoint, fill_weight int, end []Point) (allowed bool)
 }
 
@@ -164,7 +164,6 @@ func (a *AStarBaseStruct) getSurrounding(p Point) []Point {
 
     row, col := p.Row, p.Col
 
-    // Can only look up if not at the top
     if row > 0 {
         surrounding = append(surrounding, Point{row - 1, col})
     }
@@ -188,8 +187,12 @@ type Point struct {
 }
 
 // A point along a path.
-// FillWeight is the sum of all the fill weights so far
+// FillWeight is the sum of all the fill weights so far and
 // DistTraveled is the total distance traveled so far
+//
+// WeightData is an interface that can be set to anything that Config wants
+// it will never be touched by the rest of the code but if you wish to
+// have any custom data held per node you can use WeightData
 type PathPoint struct {
     Point
     Parent *PathPoint
