@@ -14,7 +14,7 @@ type AStarBase interface {
     FillTile(p Point, weight int)
     ClearTile(p Point)
 
-    FindPath(source, target []Point) (*PathPoint, map[Point]*PathPoint)
+    FindPath(source, target []Point) *PathPoint
 }
 
 type AStarConfig interface {
@@ -59,7 +59,7 @@ func (a *AStarBaseStruct) ClearTile(p Point) {
     delete(a.filledTiles, p)
 }
 
-func (a *AStarBaseStruct) FindPath(source, target []Point) (*PathPoint, map[Point]*PathPoint) {
+func (a *AStarBaseStruct) FindPath(source, target []Point) *PathPoint {
     var openList = make(map[Point]*PathPoint)
     var closeList = make(map[Point]*PathPoint)
 
@@ -122,7 +122,7 @@ func (a *AStarBaseStruct) FindPath(source, target []Point) (*PathPoint, map[Poin
         }
     }
 
-    return current, closeList
+    return current
 }
 
 func (a *AStarBaseStruct) getMinWeight(openList map[Point]*PathPoint) *PathPoint {

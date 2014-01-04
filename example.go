@@ -15,7 +15,7 @@ func main() {
     grid, ast, source, target := GenerateRandomMap(0, 50, 600, 24, 100000)
 
     PrintGrid(grid)
-    end, _ := ast.FindPath(source, target)
+    end := ast.FindPath(source, target)
 
     DrawPath(grid, end, source, target)
     PrintGrid(grid)

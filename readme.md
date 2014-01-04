@@ -32,7 +32,7 @@ func main () {
     source := []astar.Point{astar.Point{0,0}}
     target := []astar.Point{astar.Point{2,2}}
 
-    path, _ := a.FindPath(source, target)
+    path := a.FindPath(source, target)
 
     for path != nil {
         fmt.Printf("At (%d, %d)\n", path.Col, path.Row)
