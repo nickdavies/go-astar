@@ -12,62 +12,74 @@ import (
 
 func main() {
 
-    tower_weight := 100000
-    seed := time.Now().UnixNano()
-    seed = 1388799928027644148
+    grid, ast, source, target := GenerateRandomMap(0, 50, 600, 24, 100000)
 
-    fmt.Println(seed)
-    rand.Seed(seed)
+    PrintGrid(grid)
+    end, _ := ast.FindPath(source, target)
 
-    ast := astar.NewPointToPoint(50, 50)
+    DrawPath(grid, end, source, target)
+    PrintGrid(grid)
+    fmt.Println(end)
+}
 
-    grid := make([][]string, 50)
-    for i := 0; i < len(grid); i++ {
-        grid[i] = make([]string, 50)
+func GenerateRandomMap(map_seed int64, grid_size, wall_count, wall_size, wall_weight int) ([][]string, astar.AStar, []astar.Point, []astar.Point) {
+
+    if map_seed == 0 {
+        map_seed = time.Now().UnixNano()
     }
 
-    for wall_count := 0; wall_count < 600; {
-        size := GetRandInt(24)
+    fmt.Println("Map Seed", map_seed)
+    rand.Seed(map_seed)
+
+    ast := astar.NewPointToPoint(grid_size, grid_size)
+
+    grid := make([][]string, grid_size)
+    for i := 0; i < len(grid); i++ {
+        grid[i] = make([]string, grid_size)
+    }
+
+    for walls := 0; walls < wall_count; {
+        size := GetRandInt(wall_size)
         direction := GetRandInt(2)
 
         if direction == 0 {
-            c := GetRandInt(50)
-            r := GetRandInt(50 - size)
+            c := GetRandInt(grid_size)
+            r := GetRandInt(grid_size - size)
 
             for i := 0; i < size; i++ {
                 grid[r + i][c] = "#"
-                ast.FillTile(astar.Point{r + i, c}, tower_weight)
+                ast.FillTile(astar.Point{r + i, c}, wall_weight)
             }
         } else {
-            c := GetRandInt(50 - size)
-            r := GetRandInt(50)
+            c := GetRandInt(grid_size - size)
+            r := GetRandInt(grid_size)
 
             for i := 0; i < size; i++ {
                 grid[r][c + i] = "#"
-                ast.FillTile(astar.Point{r, c + i}, tower_weight)
+                ast.FillTile(astar.Point{r, c + i}, wall_weight)
             }
         }
-        wall_count += size
+        walls += size
     }
 
-    for i := 0; i < 50; i++ {
+    for i := 0; i < grid_size; i++ {
         grid[0][i] = "#"
         ast.FillTile(astar.Point{0, i}, -1)
 
         grid[i][0] = "#"
         ast.FillTile(astar.Point{i, 0}, -1)
 
-        grid[49][i] = "#"
-        ast.FillTile(astar.Point{49, i}, -1)
+        grid[grid_size - 1][i] = "#"
+        ast.FillTile(astar.Point{grid_size - 1, i}, -1)
 
-        grid[i][49] = "#"
-        ast.FillTile(astar.Point{i, 49}, -1)
+        grid[i][grid_size - 1] = "#"
+        ast.FillTile(astar.Point{i, grid_size - 1}, -1)
     }
 
     source := make([]astar.Point, 1)
     for {
-        r := GetRandInt(50)
-        c := GetRandInt(50)
+        r := GetRandInt(grid_size)
+        c := GetRandInt(grid_size)
 
         if grid[r][c] != "#" {
             grid[r][c] = "a"
@@ -80,8 +92,8 @@ func main() {
 
     target := make([]astar.Point, 1)
     for {
-        r := GetRandInt(50)
-        c := GetRandInt(50)
+        r := GetRandInt(grid_size)
+        c := GetRandInt(grid_size)
 
         if grid[r][c] != "#" && grid[r][c] != "a" {
             grid[r][c] = "b"
@@ -92,10 +104,10 @@ func main() {
         }
     }
 
-    PrintGrid(grid)
-    end, _ := ast.FindPath(source, target)
+    return grid, ast, source, target
+}
 
-    path := end
+func DrawPath(grid [][]string, path *astar.PathPoint, source, target []astar.Point) {
     for {
         if path.Row == source[0].Row && path.Col == source[0].Col {
             grid[path.Row][path.Col] = "A"
@@ -114,9 +126,8 @@ func main() {
             break
         }
     }
-    PrintGrid(grid)
-    fmt.Println(end)
 }
+
 
 func PrintGrid(grid [][]string) {
     for i := 0; i < len(grid); i++ {
