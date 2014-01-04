@@ -4,12 +4,12 @@ import "fmt"
 
 var _ = fmt.Sprint()
 
-type PointToPoint struct {
+type pointToPoint struct {
     *AStarBaseStruct
 }
 
 func NewPointToPoint(rows, cols int) AStar {
-    p2p := &PointToPoint{
+    p2p := &pointToPoint{
         AStarBaseStruct: NewAStarBaseStruct(rows, cols),
     }
 
@@ -18,7 +18,7 @@ func NewPointToPoint(rows, cols int) AStar {
     return p2p
 }
 
-func (p2p *PointToPoint) SetWeight(p *PathPoint, fill_weight int, end []Point) bool {
+func (p2p *pointToPoint) SetWeight(p *PathPoint, fill_weight int, end []Point) bool {
     if len(end) != 1 {
         panic("Invalid end specified")
     }
@@ -32,7 +32,7 @@ func (p2p *PointToPoint) SetWeight(p *PathPoint, fill_weight int, end []Point) b
     return true
 }
 
-func (p2p *PointToPoint) IsEnd(p Point, end []Point) bool {
+func (p2p *pointToPoint) IsEnd(p Point, end []Point) bool {
     if len(end) != 1 {
         panic("Invalid end specified")
     }
