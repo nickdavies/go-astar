@@ -83,3 +83,15 @@ A lock on the tiles is acquired before calling any of the Config functions.
 
 The only exception to this is if you change the `Config` property from outside the struct which you should never do anyway.
 
+## Contributing ##
+
+MIT licenced.
+
+Feel free to send me pull requests or report issues.
+
+For any pull requests please go fmt your code with:
+
+```
+gofmt -l -w -tabs=false -tabwidth=4
+```
+

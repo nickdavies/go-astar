@@ -8,7 +8,7 @@ type PointToPoint struct {
     *AStarBase
 }
 
-func NewPointToPoint (rows, cols int) AStar {
+func NewPointToPoint(rows, cols int) AStar {
     p2p := &PointToPoint{
         AStarBase: NewAStarBase(rows, cols),
     }

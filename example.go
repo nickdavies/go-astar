@@ -1,9 +1,9 @@
 package main
 
 import (
-    "time"
     "fmt"
     "math/rand"
+    "time"
 )
 
 import (
@@ -47,7 +47,7 @@ func GenerateRandomMap(map_seed int64, grid_size, wall_count, wall_size, wall_we
             r := GetRandInt(grid_size - size)
 
             for i := 0; i < size; i++ {
-                grid[r + i][c] = "#"
+                grid[r+i][c] = "#"
                 ast.FillTile(astar.Point{r + i, c}, wall_weight)
             }
         } else {
@@ -55,7 +55,7 @@ func GenerateRandomMap(map_seed int64, grid_size, wall_count, wall_size, wall_we
             r := GetRandInt(grid_size)
 
             for i := 0; i < size; i++ {
-                grid[r][c + i] = "#"
+                grid[r][c+i] = "#"
                 ast.FillTile(astar.Point{r, c + i}, wall_weight)
             }
         }
@@ -69,10 +69,10 @@ func GenerateRandomMap(map_seed int64, grid_size, wall_count, wall_size, wall_we
         grid[i][0] = "#"
         ast.FillTile(astar.Point{i, 0}, -1)
 
-        grid[grid_size - 1][i] = "#"
+        grid[grid_size-1][i] = "#"
         ast.FillTile(astar.Point{grid_size - 1, i}, -1)
 
-        grid[i][grid_size - 1] = "#"
+        grid[i][grid_size-1] = "#"
         ast.FillTile(astar.Point{i, grid_size - 1}, -1)
     }
 
@@ -128,7 +128,6 @@ func DrawPath(grid [][]string, path *astar.PathPoint, source, target []astar.Poi
     }
 }
 
-
 func PrintGrid(grid [][]string) {
     for i := 0; i < len(grid); i++ {
         for j := 0; j < len(grid[0]); j++ {
@@ -143,5 +142,5 @@ func PrintGrid(grid [][]string) {
 }
 
 func GetRandInt(limit int) int {
-	return rand.Intn(limit)
+    return rand.Intn(limit)
 }

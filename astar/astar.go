@@ -1,8 +1,8 @@
 package astar
 
 import (
-    "sync"
     "math"
+    "sync"
 )
 
 type AStar interface {
@@ -24,10 +24,9 @@ type AStarConfig interface {
 }
 
 type AStarBase struct {
-
     Config AStarConfig
     // A list of filled tiles and their weight
-    tileLock sync.Mutex
+    tileLock    sync.Mutex
     filledTiles map[Point]int
 
     rows int
@@ -35,7 +34,7 @@ type AStarBase struct {
 }
 
 func NewAStarBase(rows, cols int) *AStarBase {
-    b := &AStarBase {
+    b := &AStarBase{
         rows: rows,
         cols: cols,
 
@@ -66,7 +65,7 @@ func (a *AStarBase) FindPath(source, target []Point) (*PathPoint, map[Point]*Pat
 
     for _, p := range target {
         openList[p] = &PathPoint{
-            Point: p,
+            Point:  p,
             Parent: nil,
         }
     }
@@ -98,9 +97,9 @@ func (a *AStarBase) FindPath(source, target []Point) (*PathPoint, map[Point]*Pat
             a.tileLock.Unlock()
 
             path_point := &PathPoint{
-                Point: p,
-                Parent: current,
-                FillWeight: current.FillWeight + fill_weight,
+                Point:        p,
+                Parent:       current,
+                FillWeight:   current.FillWeight + fill_weight,
                 DistTraveled: current.DistTraveled + 1,
             }
 
@@ -148,14 +147,14 @@ func (a *AStarBase) getSurrounding(p Point) []Point {
     if row > 0 {
         surrounding = append(surrounding, Point{row - 1, col})
     }
-    if row < a.rows - 1 {
+    if row < a.rows-1 {
         surrounding = append(surrounding, Point{row + 1, col})
     }
 
     if col > 0 {
         surrounding = append(surrounding, Point{row, col - 1})
     }
-    if col < a.cols - 1 {
+    if col < a.cols-1 {
         surrounding = append(surrounding, Point{row, col + 1})
     }
 
@@ -171,14 +170,13 @@ type PathPoint struct {
     Point
     Parent *PathPoint
 
-    Weight int
-    FillWeight int
+    Weight       int
+    FillWeight   int
     DistTraveled int
 
     WeightData interface{}
 }
 
 func (p Point) Dist(other Point) int {
-    return int(math.Abs(float64(p.Row - other.Row)) + math.Abs(float64(p.Col - other.Col)))
+    return int(math.Abs(float64(p.Row-other.Row)) + math.Abs(float64(p.Col-other.Col)))
 }
-
