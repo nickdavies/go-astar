@@ -23,7 +23,8 @@ func main () {
 
     // Build AStar object from existing
     // PointToPoint configuration
-    a := astar.NewPointToPoint(rows, cols)
+    a := astar.NewAStar(rows, cols)
+    p2p := astar.NewPointToPoint()
 
     // Make an invincible obsticle at (1,1)
     a.FillTile(astar.Point{1, 1}, -1) 
@@ -32,7 +33,7 @@ func main () {
     source := []astar.Point{astar.Point{0,0}}
     target := []astar.Point{astar.Point{2,2}}
 
-    path := a.FindPath(source, target)
+    path := a.FindPath(p2p, source, target)
 
     for path != nil {
         fmt.Printf("At (%d, %d)\n", path.Col, path.Row)
@@ -43,32 +44,28 @@ func main () {
 
 ### Custom Routing Logic ###
 
-To use your own routing logic make a struct that has a `AStarBaseStruct` struct within it and
-initialise the `AStarBaseStruct` with the `NewAStarBase` function and set `AStarBaseStruct.config = x` where x is
-your struct. Then make sure your struct implements `AStarConfig` and you can use it to route.
+To use your own routing logic make a struct that implements `AStarConfig` and then pass that
+struct into your call to FindPath
 
 For example if you wanted routing that would ignore walls something that ignores walls:
 
 ```go
 type MyAStar struct {
-    *astar.AStarBaseStruct
 }
 
-func NewMyAStar (rows, cols int) astar.AStar {
+func NewMyAStar () astar.AStar {
     my := &MyAStar{
-        AStarBaseStruct: astar.NewAStarBase(rows, cols),
-    }   
-    my.AStarBaseStruct.Config = my
+    }
     return my
 }
 
-func (my *MyAStar) SetWeight(p *astar.PathPoint, fill_weight int, end []astar.Point) bool {
+func (my *MyAStar) SetWeight(p *astar.PathPoint, fill_weight int, end []astar.Point, end_map map[astar.Point]bool) bool {
     p.Weight = p.DistTraveled + p.Point.Dist(end[0])
     return true
 }
 
-func (my *MyAStar) IsEnd(p astar.Point, end []astar.Point) bool {
-    return p == end[0]
+func (my *MyAStar) IsEnd(p astar.Point, end []astar.Point, end_map map[astar.Point]bool) bool {
+    return end_map[p]
 }
 ```
 
@@ -76,12 +73,12 @@ func (my *MyAStar) IsEnd(p astar.Point, end []astar.Point) bool {
 
 A full example with a proper grid and walls etc can be found in `example.go` in the root of the repo
 
+An interesting seed is 1388819613980807431 (you can set this at the top of the file or leave it for random)
+
 ## Thread Safe ###
 
 __All operations are thread-safe__ so you can perform multiple path searches on the same grid at the same time.
 A lock on the tiles is acquired before calling any of the Config functions.
-
-The only exception to this is if you change the `Config` property from outside the struct which you should never do anyway.
 
 ## Contributing ##
 

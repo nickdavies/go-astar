@@ -11,7 +11,6 @@ var _ = fmt.Sprint()
 //######################################################################
 
 type pointToPoint struct {
-    *AStarBaseStruct
 }
 
 // Basic point to point routing, only a single source
@@ -19,17 +18,13 @@ type pointToPoint struct {
 //
 // Weights are calulated by summing the tiles fill_weight, the total distance traveled
 // and the current distance from the target
-func NewPointToPoint(rows, cols int) AStar {
-    p2p := &pointToPoint{
-        AStarBaseStruct: NewAStarBaseStruct(rows, cols),
-    }
-
-    p2p.AStarBaseStruct.Config = p2p
+func NewPointToPoint() AStarConfig {
+    p2p := &pointToPoint{}
 
     return p2p
 }
 
-func (p2p *pointToPoint) SetWeight(p *PathPoint, fill_weight int, end []Point) bool {
+func (p2p *pointToPoint) SetWeight(p *PathPoint, fill_weight int, end []Point, end_map map[Point]bool) bool {
     if len(end) != 1 {
         panic("Invalid end specified")
     }
@@ -43,7 +38,7 @@ func (p2p *pointToPoint) SetWeight(p *PathPoint, fill_weight int, end []Point) b
     return true
 }
 
-func (p2p *pointToPoint) IsEnd(p Point, end []Point) bool {
+func (p2p *pointToPoint) IsEnd(p Point, end []Point, end_map map[Point]bool) bool {
     if len(end) != 1 {
         panic("Invalid end specified")
     }
@@ -54,7 +49,6 @@ func (p2p *pointToPoint) IsEnd(p Point, end []Point) bool {
 //######################################################################
 
 type rowToRow struct {
-    *AStarBaseStruct
 }
 
 // Based off the PointToPoint config except that it uses row based targeting.
@@ -64,17 +58,12 @@ type rowToRow struct {
 // A single point should be given for the source which will determine the starting row.
 // for the target you should provide every valid entry on the target row for the best results.
 // you do not have to but the path may look a little strange sometimes.
-func NewRowToRow(rows, cols int) AStar {
-    r2r := &rowToRow{
-        AStarBaseStruct: NewAStarBaseStruct(rows, cols),
-    }
-
-    r2r.AStarBaseStruct.Config = r2r
-
+func NewRowToRow() AStarConfig {
+    r2r := &rowToRow{}
     return r2r
 }
 
-func (r2r *rowToRow) SetWeight(p *PathPoint, fill_weight int, end []Point) bool {
+func (r2r *rowToRow) SetWeight(p *PathPoint, fill_weight int, end []Point, end_map map[Point]bool) bool {
     if len(end) != 1 {
         panic("Invalid end specified")
     }
@@ -88,9 +77,50 @@ func (r2r *rowToRow) SetWeight(p *PathPoint, fill_weight int, end []Point) bool 
     return true
 }
 
-func (r2r *rowToRow) IsEnd(p Point, end []Point) bool {
+func (r2r *rowToRow) IsEnd(p Point, end []Point, end_map map[Point]bool) bool {
     if len(end) != 1 {
         panic("Invalid end specified")
     }
     return p.Row == end[0].Row
+}
+
+//######################################################################
+//######################################################################
+
+type pointToList struct {
+}
+
+// point to list routing, from any single point to a list of points. for example
+// to find your way back to the main path.
+//
+// Both multiple targets and sources are supported but is slower than the others
+//
+// Weights are calulated by summing the tiles fill_weight, the total distance traveled
+// and the current distance from the closeset target
+func NewPointToList() AStarConfig {
+    p2l := &pointToList{}
+
+    return p2l
+}
+
+func (p2l *pointToList) SetWeight(p *PathPoint, fill_weight int, end []Point, end_map map[Point]bool) bool {
+    if fill_weight == -1 {
+        return false
+    }
+
+    min_dist := -1
+    for _, end_p := range end {
+        dist := p.Point.Dist(end_p)
+        if min_dist == -1 || dist < min_dist {
+            min_dist = dist
+        }
+    }
+
+    p.Weight = p.FillWeight + p.DistTraveled + min_dist
+
+    return true
+}
+
+func (p2l *pointToList) IsEnd(p Point, end []Point, end_map map[Point]bool) bool {
+    return end_map[p]
 }

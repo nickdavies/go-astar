@@ -5,19 +5,22 @@ import (
     "sync"
 )
 
-// Final interface that A*'s should implement
 type AStar interface {
-    AStarBase
-    AStarConfig
-}
-
-// The base algorithm implementation provided by AStarBaseStruct
-type AStarBase interface {
+    // Fill a given tile with a given weight this is used for making certain areas more complicated
+    // to cross than others. For example you may have a higher weight for a wall or mountain.
+    // This weight will be given back to you in the SetWeight function
+    // Inbuilt A*'s use -1 to determine that it can not be passed at all.
     FillTile(p Point, weight int)
 
+    // Resets the weight back to 0 for a given tile
     ClearTile(p Point)
 
-    FindPath(source, target []Point) *PathPoint
+    // Calculate the easiest path from ANY element in source to ANY element in target.
+    // There is no hard rules about which element will become the start and end (unless your config
+    // enforces it).
+    // The start of the path is returned to you. If no path exists then the function will
+    // return nil as the path.
+    FindPath(config AStarConfig, source, target []Point) *PathPoint
 }
 
 // The user built configuration that determines how weights are calculated and
@@ -25,18 +28,16 @@ type AStarBase interface {
 type AStarConfig interface {
     // Determine if a valid end point has been reached. The end parameter
     // is the value passed in as source because the algorithm works backwards.
-    IsEnd(p Point, end []Point) bool
+    IsEnd(p Point, end []Point, end_map map[Point]bool) bool
 
     // Calculate and set the weight for p.
     // fill_weight is the weight assigned to the tile when FillTile was called
     // or 0 if it was never called for that tile.
     // end is also provided so you can perform calculations such as distance remaining.
-    SetWeight(p *PathPoint, fill_weight int, end []Point) (allowed bool)
+    SetWeight(p *PathPoint, fill_weight int, end []Point, end_map map[Point]bool) (allowed bool)
 }
 
-// The base algorithm implementation
-type AStarBaseStruct struct {
-    Config AStarConfig
+type gridStruct struct {
     // A list of filled tiles and their weight
     tileLock    sync.Mutex
     filledTiles map[Point]int
@@ -45,58 +46,62 @@ type AStarBaseStruct struct {
     cols int
 }
 
-func NewAStarBaseStruct(rows, cols int) *AStarBaseStruct {
-    b := &AStarBaseStruct{
+func NewAStar(rows, cols int) AStar {
+    return &gridStruct{
         rows: rows,
         cols: cols,
 
         filledTiles: make(map[Point]int),
     }
-    var _ AStarBase = b
-
-    return b
 }
 
-// Fill a given tile with a given weight this is used for making certain areas more complicated
-// to cross than others. For example you may have a higher weight for a wall or mountain.
-// This weight will be given back to you in the SetWeight function
-// Inbuilt A*'s use -1 to determine that it can not be passed at all.
-func (a *AStarBaseStruct) FillTile(p Point, weight int) {
+func (a *gridStruct) FillTile(p Point, weight int) {
     a.tileLock.Lock()
     defer a.tileLock.Unlock()
 
     a.filledTiles[p] = weight
 }
 
-// Resets the weight back to 0 for a given tile
-func (a *AStarBaseStruct) ClearTile(p Point) {
+func (a *gridStruct) ClearTile(p Point) {
     a.tileLock.Lock()
     defer a.tileLock.Unlock()
 
     delete(a.filledTiles, p)
 }
 
-// Calculate the easiest path from ANY element in source to ANY element in target.
-// There is no hard rules about which element will become the start and end.
-// The start of the path is returned to you. If no path exists then the function will
-// return nil as the path.
-func (a *AStarBaseStruct) FindPath(source, target []Point) *PathPoint {
+func (a *gridStruct) FindPath(config AStarConfig, source, target []Point) *PathPoint {
     var openList = make(map[Point]*PathPoint)
     var closeList = make(map[Point]*PathPoint)
 
+    source_map := make(map[Point]bool)
+    for _, p := range source {
+        source_map[p] = true
+    }
+
+    a.tileLock.Lock()
     for _, p := range target {
-        openList[p] = &PathPoint{
-            Point:  p,
-            Parent: nil,
+        fill_weight := a.filledTiles[p]
+        path_point := &PathPoint{
+            Point:        p,
+            Parent:       nil,
+            DistTraveled: 0,
+            FillWeight:   fill_weight,
+        }
+
+        allowed := config.SetWeight(path_point, fill_weight, source, source_map)
+        if allowed {
+            openList[p] = path_point
         }
     }
+
+    a.tileLock.Unlock()
 
     var current *PathPoint
     for {
         current = a.getMinWeight(openList)
 
         a.tileLock.Lock()
-        if current == nil || a.Config.IsEnd(current.Point, source) {
+        if current == nil || config.IsEnd(current.Point, source, source_map) {
             a.tileLock.Unlock()
             break
         }
@@ -125,7 +130,7 @@ func (a *AStarBaseStruct) FindPath(source, target []Point) *PathPoint {
             }
 
             a.tileLock.Lock()
-            allowed := a.Config.SetWeight(path_point, fill_weight, source)
+            allowed := config.SetWeight(path_point, fill_weight, source, source_map)
             a.tileLock.Unlock()
 
             if !allowed {
@@ -146,7 +151,7 @@ func (a *AStarBaseStruct) FindPath(source, target []Point) *PathPoint {
     return current
 }
 
-func (a *AStarBaseStruct) getMinWeight(openList map[Point]*PathPoint) *PathPoint {
+func (a *gridStruct) getMinWeight(openList map[Point]*PathPoint) *PathPoint {
     var min *PathPoint = nil
     var minWeight int = 0
 
@@ -159,7 +164,7 @@ func (a *AStarBaseStruct) getMinWeight(openList map[Point]*PathPoint) *PathPoint
     return min
 }
 
-func (a *AStarBaseStruct) getSurrounding(p Point) []Point {
+func (a *gridStruct) getSurrounding(p Point) []Point {
     var surrounding []Point
 
     row, col := p.Row, p.Col

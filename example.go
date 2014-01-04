@@ -12,17 +12,55 @@ import (
 
 func main() {
 
-    grid, ast, source, target := GenerateRandomMap(0, 50, 600, 24, 100000)
+    var start_t int64
+    var end_t int64
 
-    PrintGrid(grid)
-    end := ast.FindPath(source, target)
+    var seed int64 = 0
 
-    DrawPath(grid, end, source, target)
+    // Setup the aStar structs
+    ast := astar.NewAStar(50, 50)
+
+    p2p := astar.NewPointToPoint()
+    p2l := astar.NewPointToList()
+
+    // Generate a random map
+    grid, source, target, me := GenerateRandomMap(ast, seed, 50, 600, 24, 100000)
     PrintGrid(grid)
-    fmt.Println(end)
+
+    // Route from source to target (point to point)
+    start_t = time.Now().UnixNano()
+    end := ast.FindPath(p2p, source, target)
+    end_t = time.Now().UnixNano()
+
+    first_path_t := float64(end_t-start_t) / float64(time.Millisecond)
+
+    DrawPath(grid, end, "*")
+    PrintGrid(grid)
+
+    // record path as array so it can be used in the next search
+    p := end
+    path := make([]astar.Point, 0)
+    for p != nil {
+        path = append(path, p.Point)
+        p = p.Parent
+    }
+
+    start_t = time.Now().UnixNano()
+    end = ast.FindPath(p2l, path, me)
+    end_t = time.Now().UnixNano()
+    second_path_t := float64(end_t-start_t) / float64(time.Millisecond)
+
+    DrawPath(grid, end, ".")
+    PrintGrid(grid)
+
+    fmt.Println("me", me)
+    fmt.Println("end", end)
+    fmt.Println("end_grid", grid[end.Row][end.Col])
+    fmt.Println(first_path_t)
+    fmt.Println(second_path_t)
 }
 
-func GenerateRandomMap(map_seed int64, grid_size, wall_count, wall_size, wall_weight int) ([][]string, astar.AStar, []astar.Point, []astar.Point) {
+func GenerateRandomMap(ast astar.AStar, map_seed int64, grid_size, wall_count, wall_size, wall_weight int) ([][]string, []astar.Point, []astar.Point, []astar.Point) {
 
     if map_seed == 0 {
         map_seed = time.Now().UnixNano()
@@ -30,8 +68,6 @@ func GenerateRandomMap(map_seed int64, grid_size, wall_count, wall_size, wall_we
 
     fmt.Println("Map Seed", map_seed)
     rand.Seed(map_seed)
-
-    ast := astar.NewPointToPoint(grid_size, grid_size)
 
     grid := make([][]string, grid_size)
     for i := 0; i < len(grid); i++ {
@@ -104,21 +140,29 @@ func GenerateRandomMap(map_seed int64, grid_size, wall_count, wall_size, wall_we
         }
     }
 
-    return grid, ast, source, target
+    me := make([]astar.Point, 1)
+    for {
+        r := GetRandInt(grid_size)
+        c := GetRandInt(grid_size)
+
+        if grid[r][c] != "#" && grid[r][c] != "a" && grid[r][c] != "b" {
+            grid[r][c] = "c"
+
+            me[0].Row = r
+            me[0].Col = c
+            break
+        }
+    }
+
+    return grid, source, target, me
 }
 
-func DrawPath(grid [][]string, path *astar.PathPoint, source, target []astar.Point) {
+func DrawPath(grid [][]string, path *astar.PathPoint, path_char string) {
     for {
-        if path.Row == source[0].Row && path.Col == source[0].Col {
-            grid[path.Row][path.Col] = "A"
-        } else if path.Row == target[0].Row && path.Col == target[0].Col {
-            grid[path.Row][path.Col] = "B"
-        } else {
-            if grid[path.Row][path.Col] == "#" {
-                grid[path.Row][path.Col] = "X"
-            } else {
-                grid[path.Row][path.Col] = "*"
-            }
+        if grid[path.Row][path.Col] == "#" {
+            grid[path.Row][path.Col] = "X"
+        } else if grid[path.Row][path.Col] == "" {
+            grid[path.Row][path.Col] = path_char
         }
 
         path = path.Parent
@@ -139,6 +183,7 @@ func PrintGrid(grid [][]string) {
         }
         fmt.Print("\n")
     }
+    fmt.Print("\n")
 }
 
 func GetRandInt(limit int) int {
