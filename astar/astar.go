@@ -5,41 +5,25 @@ import (
 )
 
 type AStar interface {
+    aStarBase
+    AStarConfig
+}
+
+type aStarBase interface {
     FillTile(p Point, weight int)
     ClearTile(p Point)
 
-    FindPath(source []Point, target Point, weightCalc WeightCalculation) (*PathPoint, map[Point]*PathPoint)
+    FindPath(source, target []Point) (*PathPoint, map[Point]*PathPoint)
 }
 
-type Point struct {
-    Row int
-    Col int
+type AStarConfig interface {
+    IsTarget(p Point, target []Point) bool
+
+    SetWeight(p *PathPoint, fill_weight int, target []Point) (allowed bool)
 }
 
-type PathPoint struct {
-    Point
-    Parent *PathPoint
-
-    Weight int
-    DistTraveled int
-
-    WeightData interface{}
-}
-
-func (p Point) Dist(other Point) int {
-    return int(math.Abs(float64(p.Row - other.Row)) + math.Abs(float64(p.Col - other.Col)))
-}
-
-func NewAStar(Rows, Cols int) AStar {
-    return &aStarStruct {
-        rows: Rows,
-        cols: Cols,
-
-        filledTiles: make(map[Point]int),
-    }
-}
-
-type aStarStruct struct {
+type AStarBase struct {
+    config AStarConfig
     // A list of filled tiles and their weight
     filledTiles map[Point]int
 
@@ -47,15 +31,27 @@ type aStarStruct struct {
     cols int
 }
 
-func (a *aStarStruct) FillTile(p Point, weight int) {
+func NewAStarBase(rows, cols int) *AStarBase {
+    b := &AStarBase {
+        rows: rows,
+        cols: cols,
+
+        filledTiles: make(map[Point]int),
+    }
+    var _ aStarBase = b
+
+    return b
+}
+
+func (a *AStarBase) FillTile(p Point, weight int) {
     a.filledTiles[p] = weight
 }
 
-func (a *aStarStruct) ClearTile(p Point) {
+func (a *AStarBase) ClearTile(p Point) {
     delete(a.filledTiles, p)
 }
 
-func (a *aStarStruct) FindPath(source []Point, target Point, weightCalc WeightCalculation) (*PathPoint, map[Point]*PathPoint) {
+func (a *AStarBase) FindPath(source, target []Point) (*PathPoint, map[Point]*PathPoint) {
     var openList = make(map[Point]*PathPoint)
     var closeList = make(map[Point]*PathPoint)
 
@@ -69,7 +65,7 @@ func (a *aStarStruct) FindPath(source []Point, target Point, weightCalc WeightCa
     var current *PathPoint
     for {
         current = a.getMinWeight(openList)
-        if current == nil || current.Point == target {
+        if current == nil || a.config.IsTarget(current.Point, target) {
             break
         }
 
@@ -92,8 +88,13 @@ func (a *aStarStruct) FindPath(source []Point, target Point, weightCalc WeightCa
             path_point := &PathPoint{
                 Point: p,
                 Parent: current,
+                FillWeight: current.FillWeight + fill_weight,
+                DistTraveled: current.DistTraveled + 1,
             }
-            weightCalc(path_point, fill_weight, target)
+            allowed := a.config.SetWeight(path_point, fill_weight, target)
+            if !allowed {
+                continue
+            }
 
             existing_point, ok := openList[p]
             if !ok {
@@ -109,7 +110,7 @@ func (a *aStarStruct) FindPath(source []Point, target Point, weightCalc WeightCa
     return current, closeList
 }
 
-func (a *aStarStruct) getMinWeight(openList map[Point]*PathPoint) *PathPoint {
+func (a *AStarBase) getMinWeight(openList map[Point]*PathPoint) *PathPoint {
     var min *PathPoint = nil
     var minWeight int = 0
 
@@ -122,7 +123,7 @@ func (a *aStarStruct) getMinWeight(openList map[Point]*PathPoint) *PathPoint {
     return min
 }
 
-func (a *aStarStruct) getSurrounding(p Point) []Point {
+func (a *AStarBase) getSurrounding(p Point) []Point {
     var surrounding []Point
 
     row, col := p.Row, p.Col
@@ -145,4 +146,23 @@ func (a *aStarStruct) getSurrounding(p Point) []Point {
     return surrounding
 }
 
+type Point struct {
+    Row int
+    Col int
+}
+
+type PathPoint struct {
+    Point
+    Parent *PathPoint
+
+    Weight int
+    FillWeight int
+    DistTraveled int
+
+    WeightData interface{}
+}
+
+func (p Point) Dist(other Point) int {
+    return int(math.Abs(float64(p.Row - other.Row)) + math.Abs(float64(p.Col - other.Col)))
+}
 

@@ -14,11 +14,12 @@ func main() {
 
     tower_weight := 100000
     seed := time.Now().UnixNano()
+    seed = 1388799928027644148
 
     fmt.Println(seed)
     rand.Seed(seed)
 
-    ast := astar.NewAStar(50, 50)
+    ast := astar.NewPointToPoint(50, 50)
 
     grid := make([][]string, 50)
     for i := 0; i < len(grid); i++ {
@@ -77,7 +78,7 @@ func main() {
         }
     }
 
-    var target astar.Point
+    target := make([]astar.Point, 1)
     for {
         r := GetRandInt(50)
         c := GetRandInt(50)
@@ -85,20 +86,20 @@ func main() {
         if grid[r][c] != "#" && grid[r][c] != "a" {
             grid[r][c] = "b"
 
-            target.Row = r
-            target.Col = c
+            target[0].Row = r
+            target[0].Col = c
             break
         }
     }
 
     PrintGrid(grid)
-    end, _ := ast.FindPath(source, target, astar.RawDist)
+    end, _ := ast.FindPath(source, target)
 
     path := end
     for {
         if path.Row == source[0].Row && path.Col == source[0].Col {
             grid[path.Row][path.Col] = "A"
-        } else if path.Row == target.Row && path.Col == target.Col {
+        } else if path.Row == target[0].Row && path.Col == target[0].Col {
             grid[path.Row][path.Col] = "B"
         } else {
             if grid[path.Row][path.Col] == "#" {
@@ -114,6 +115,7 @@ func main() {
         }
     }
     PrintGrid(grid)
+    fmt.Println(end)
 }
 
 func PrintGrid(grid [][]string) {
