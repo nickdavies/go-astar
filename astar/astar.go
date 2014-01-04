@@ -208,4 +208,3 @@ type PathPoint struct {
 func (p Point) Dist(other Point) int {
     return int(math.Abs(float64(p.Row-other.Row)) + math.Abs(float64(p.Col-other.Col)))
 }
-
