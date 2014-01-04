@@ -17,13 +17,13 @@ type aStarBase interface {
 }
 
 type AStarConfig interface {
-    IsTarget(p Point, target []Point) bool
+    IsEnd(p Point, end []Point) bool
 
-    SetWeight(p *PathPoint, fill_weight int, target []Point) (allowed bool)
+    SetWeight(p *PathPoint, fill_weight int, end []Point) (allowed bool)
 }
 
 type AStarBase struct {
-    config AStarConfig
+    Config AStarConfig
     // A list of filled tiles and their weight
     filledTiles map[Point]int
 
@@ -55,7 +55,7 @@ func (a *AStarBase) FindPath(source, target []Point) (*PathPoint, map[Point]*Pat
     var openList = make(map[Point]*PathPoint)
     var closeList = make(map[Point]*PathPoint)
 
-    for _, p := range source {
+    for _, p := range target {
         openList[p] = &PathPoint{
             Point: p,
             Parent: nil,
@@ -65,7 +65,7 @@ func (a *AStarBase) FindPath(source, target []Point) (*PathPoint, map[Point]*Pat
     var current *PathPoint
     for {
         current = a.getMinWeight(openList)
-        if current == nil || a.config.IsTarget(current.Point, target) {
+        if current == nil || a.Config.IsEnd(current.Point, source) {
             break
         }
 
@@ -81,9 +81,6 @@ func (a *AStarBase) FindPath(source, target []Point) (*PathPoint, map[Point]*Pat
             }
 
             fill_weight := a.filledTiles[p]
-            if fill_weight == -1 {
-                continue
-            }
 
             path_point := &PathPoint{
                 Point: p,
@@ -91,7 +88,7 @@ func (a *AStarBase) FindPath(source, target []Point) (*PathPoint, map[Point]*Pat
                 FillWeight: current.FillWeight + fill_weight,
                 DistTraveled: current.DistTraveled + 1,
             }
-            allowed := a.config.SetWeight(path_point, fill_weight, target)
+            allowed := a.Config.SetWeight(path_point, fill_weight, source)
             if !allowed {
                 continue
             }
@@ -132,14 +129,14 @@ func (a *AStarBase) getSurrounding(p Point) []Point {
     if row > 0 {
         surrounding = append(surrounding, Point{row - 1, col})
     }
-    if row < a.rows {
+    if row < a.rows - 1 {
         surrounding = append(surrounding, Point{row + 1, col})
     }
 
     if col > 0 {
         surrounding = append(surrounding, Point{row, col - 1})
     }
-    if col < a.cols {
+    if col < a.cols - 1 {
         surrounding = append(surrounding, Point{row, col + 1})
     }
 

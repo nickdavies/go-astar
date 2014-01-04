@@ -6,8 +6,6 @@ var _ = fmt.Sprint()
 
 type PointToPoint struct {
     *AStarBase
-
-    target Point
 }
 
 func NewPointToPoint (rows, cols int) AStar {
@@ -15,24 +13,28 @@ func NewPointToPoint (rows, cols int) AStar {
         AStarBase: NewAStarBase(rows, cols),
     }
 
-    p2p.AStarBase.config = p2p
+    p2p.AStarBase.Config = p2p
 
     return p2p
 }
 
-func (p2p *PointToPoint) SetWeight(p *PathPoint, fill_weight int, target []Point) bool {
-    if len(target) != 1 {
-        panic("Invalid Target Specified")
+func (p2p *PointToPoint) SetWeight(p *PathPoint, fill_weight int, end []Point) bool {
+    if len(end) != 1 {
+        panic("Invalid end specified")
     }
 
-    p.Weight = p.FillWeight + p.DistTraveled + p.Point.Dist(target[0])
+    if fill_weight == -1 {
+        return false
+    }
+
+    p.Weight = p.FillWeight + p.DistTraveled + p.Point.Dist(end[0])
 
     return true
 }
 
-func (p2p *PointToPoint) IsTarget(p Point, target []Point) bool {
-    if len(target) != 1 {
-        panic("Invalid Target Specified")
+func (p2p *PointToPoint) IsEnd(p Point, end []Point) bool {
+    if len(end) != 1 {
+        panic("Invalid end specified")
     }
-    return p == target[0]
+    return p == end[0]
 }
