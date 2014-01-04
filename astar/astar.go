@@ -1,6 +1,7 @@
 package astar
 
 import (
+    "sync"
     "math"
 )
 
@@ -23,8 +24,10 @@ type AStarConfig interface {
 }
 
 type AStarBase struct {
+
     Config AStarConfig
     // A list of filled tiles and their weight
+    tileLock sync.Mutex
     filledTiles map[Point]int
 
     rows int
@@ -44,10 +47,16 @@ func NewAStarBase(rows, cols int) *AStarBase {
 }
 
 func (a *AStarBase) FillTile(p Point, weight int) {
+    a.tileLock.Lock()
+    defer a.tileLock.Unlock()
+
     a.filledTiles[p] = weight
 }
 
 func (a *AStarBase) ClearTile(p Point) {
+    a.tileLock.Lock()
+    defer a.tileLock.Unlock()
+
     delete(a.filledTiles, p)
 }
 
@@ -65,9 +74,13 @@ func (a *AStarBase) FindPath(source, target []Point) (*PathPoint, map[Point]*Pat
     var current *PathPoint
     for {
         current = a.getMinWeight(openList)
+
+        a.tileLock.Lock()
         if current == nil || a.Config.IsEnd(current.Point, source) {
+            a.tileLock.Unlock()
             break
         }
+        a.tileLock.Unlock()
 
         delete(openList, current.Point)
         closeList[current.Point] = current
@@ -80,7 +93,9 @@ func (a *AStarBase) FindPath(source, target []Point) (*PathPoint, map[Point]*Pat
                 continue
             }
 
+            a.tileLock.Lock()
             fill_weight := a.filledTiles[p]
+            a.tileLock.Unlock()
 
             path_point := &PathPoint{
                 Point: p,
@@ -88,7 +103,11 @@ func (a *AStarBase) FindPath(source, target []Point) (*PathPoint, map[Point]*Pat
                 FillWeight: current.FillWeight + fill_weight,
                 DistTraveled: current.DistTraveled + 1,
             }
+
+            a.tileLock.Lock()
             allowed := a.Config.SetWeight(path_point, fill_weight, source)
+            a.tileLock.Unlock()
+
             if !allowed {
                 continue
             }
