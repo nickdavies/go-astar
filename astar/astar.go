@@ -5,24 +5,45 @@ import (
     "sync"
 )
 
+// Final interface that A*'s should implement
 type AStar interface {
     AStarBase
     AStarConfig
 }
 
+// The base algorithm implementation provided by AStarBaseStruct
 type AStarBase interface {
+    // Fill a given tile with a given weight this is used for making certain areas more complicated
+    // to cross than others. For example you may have a higher weight for a wall or mountain.
+    // This weight will be given back to you in the SetWeight function
+    // Inbuilt A*'s use -1 to determine that it can not be passed at all.
     FillTile(p Point, weight int)
+
+    // This resets the weight back to 0 for a given tile
     ClearTile(p Point)
 
+    // Calculate the easiest path from ANY element in source to ANY element in target.
+    // There is no hard rules about which element will become the start and end.
+    // The start of the path is returned to you. If no path exists then the function will
+    // return nil as the path.
     FindPath(source, target []Point) *PathPoint
 }
 
+// The user built configuration that determines how weights are calculated and
+// also determines the stopping condition
 type AStarConfig interface {
+    // Determine if a valid end point has been reached. The end parameter
+    // Is the value passed in as source because the algorithm works backwards.
     IsEnd(p Point, end []Point) bool
 
+    // Calculate and set the weight for p.
+    // fill_weight is the weight assigned to the tile when FillTile was called
+    // or 0 if it was never called for that tile
+    // end is also provided so you can perform calculations such as distance remaining
     SetWeight(p *PathPoint, fill_weight int, end []Point) (allowed bool)
 }
 
+// The base algorithm implementation
 type AStarBaseStruct struct {
     Config AStarConfig
     // A list of filled tiles and their weight
