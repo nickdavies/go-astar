@@ -13,19 +13,10 @@ type AStar interface {
 
 // The base algorithm implementation provided by AStarBaseStruct
 type AStarBase interface {
-    // Fill a given tile with a given weight this is used for making certain areas more complicated
-    // to cross than others. For example you may have a higher weight for a wall or mountain.
-    // This weight will be given back to you in the SetWeight function
-    // Inbuilt A*'s use -1 to determine that it can not be passed at all.
     FillTile(p Point, weight int)
 
-    // This resets the weight back to 0 for a given tile
     ClearTile(p Point)
 
-    // Calculate the easiest path from ANY element in source to ANY element in target.
-    // There is no hard rules about which element will become the start and end.
-    // The start of the path is returned to you. If no path exists then the function will
-    // return nil as the path.
     FindPath(source, target []Point) *PathPoint
 }
 
@@ -66,6 +57,10 @@ func NewAStarBaseStruct(rows, cols int) *AStarBaseStruct {
     return b
 }
 
+// Fill a given tile with a given weight this is used for making certain areas more complicated
+// to cross than others. For example you may have a higher weight for a wall or mountain.
+// This weight will be given back to you in the SetWeight function
+// Inbuilt A*'s use -1 to determine that it can not be passed at all.
 func (a *AStarBaseStruct) FillTile(p Point, weight int) {
     a.tileLock.Lock()
     defer a.tileLock.Unlock()
@@ -73,6 +68,7 @@ func (a *AStarBaseStruct) FillTile(p Point, weight int) {
     a.filledTiles[p] = weight
 }
 
+// Resets the weight back to 0 for a given tile
 func (a *AStarBaseStruct) ClearTile(p Point) {
     a.tileLock.Lock()
     defer a.tileLock.Unlock()
@@ -80,6 +76,10 @@ func (a *AStarBaseStruct) ClearTile(p Point) {
     delete(a.filledTiles, p)
 }
 
+// Calculate the easiest path from ANY element in source to ANY element in target.
+// There is no hard rules about which element will become the start and end.
+// The start of the path is returned to you. If no path exists then the function will
+// return nil as the path.
 func (a *AStarBaseStruct) FindPath(source, target []Point) *PathPoint {
     var openList = make(map[Point]*PathPoint)
     var closeList = make(map[Point]*PathPoint)
@@ -187,6 +187,9 @@ type Point struct {
     Col int
 }
 
+// A point along a path.
+// FillWeight is the sum of all the fill weights so far
+// DistTraveled is the total distance traveled so far
 type PathPoint struct {
     Point
     Parent *PathPoint
@@ -198,6 +201,8 @@ type PathPoint struct {
     WeightData interface{}
 }
 
+// Manhattan distance NOT euclidean distance because in our routing we cant go diagonally between the points.
 func (p Point) Dist(other Point) int {
     return int(math.Abs(float64(p.Row-other.Row)) + math.Abs(float64(p.Col-other.Col)))
 }
+
