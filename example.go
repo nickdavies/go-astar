@@ -21,7 +21,7 @@ func main() {
     ast := astar.NewAStar(50, 50)
 
     p2p := astar.NewPointToPoint()
-    p2l := astar.NewPointToList()
+    p2l := astar.NewListToPoint(true)
 
     // Generate a random map
     grid, source, target, me := GenerateRandomMap(ast, seed, 50, 600, 24, 100000)

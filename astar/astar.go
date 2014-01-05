@@ -35,6 +35,10 @@ type AStarConfig interface {
     // or 0 if it was never called for that tile.
     // end is also provided so you can perform calculations such as distance remaining.
     SetWeight(p *PathPoint, fill_weight int, end []Point, end_map map[Point]bool) (allowed bool)
+
+    // PostProcess the path after it has been calculated this might be useful if you want do do things
+    // like reverse it or add constant moves at the start or end etc.
+    PostProcess(p *PathPoint, rows, cols int, filledTiles map[Point]int) (*PathPoint)
 }
 
 type gridStruct struct {
@@ -147,6 +151,10 @@ func (a *gridStruct) FindPath(config AStarConfig, source, target []Point) *PathP
             }
         }
     }
+
+    a.tileLock.Lock()
+    current = config.PostProcess(current, a.rows, a.cols, a.filledTiles)
+    a.tileLock.Unlock()
 
     return current
 }

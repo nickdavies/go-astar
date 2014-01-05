@@ -47,10 +47,15 @@ func main () {
 To use your own routing logic make a struct that implements `AStarConfig` and then pass that
 struct into your call to FindPath
 
+You must also decide if you want any post processing to be applied to your path before it is
+returned, if you want none then you should embed the `VoidPostProcess` struct into your struct or
+if you want to reverse the path use the `ReversePostProcess` struct or define your own.
+
 For example if you wanted routing that would ignore walls something that ignores walls:
 
 ```go
 type MyAStar struct {
+    VoidPostProcess
 }
 
 func NewMyAStar () astar.AStar {
