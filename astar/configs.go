@@ -125,9 +125,11 @@ func (p2l *listToPoint) SetWeight(p *PathPoint, fill_weight int, end []Point, en
         return false
     }
 
+    path_length := len(end)
+
     min_dist := -1
-    for _, end_p := range end {
-        dist := p.Point.Dist(end_p)
+    for i, end_p := range end {
+        dist := p.Point.Dist(end_p) + (path_length - i)
         if min_dist == -1 || dist < min_dist {
             min_dist = dist
         }
